@@ -1,4 +1,4 @@
-![GenX logo](assets/GenX_icon.png)
+![GenX logo](https://github.com/Jadhav-Krishna/GenX/blob/main/assets/GenX_%20icon.png?raw=true)
 
 
 # GenX Tactical Operations
