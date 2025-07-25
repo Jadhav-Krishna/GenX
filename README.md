@@ -1,3 +1,6 @@
+![GenX logo](assets/GenX_icon.png)
+
+
 # GenX Tactical Operations
 
 A cyberpunk-themed desktop application built with Electron, React, and TypeScript.
