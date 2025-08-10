@@ -82,3 +82,4 @@ THEME_ACCENT_COLOR=#ff0080      # Hot pink accent
 THEME_SUCCESS_COLOR=#00ff00     # Bright green
 THEME_WARNING_COLOR=#ffff00     # Yellow warning
 THEME_ERROR_COLOR=#ff0000       # Red error
+\`\`\`
