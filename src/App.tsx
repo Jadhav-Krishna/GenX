@@ -131,6 +131,11 @@ const MainContent = styled.div`
   display: flex;
   position: relative;
   z-index: 3;
+  overflow: auto;
+
+  @media (max-width: 1024px) {
+    flex-direction: column;
+  }
 `
 
 const LoadingScreen = styled.div`

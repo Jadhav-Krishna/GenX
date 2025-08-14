@@ -5,38 +5,63 @@ import { motion } from "framer-motion"
 import { Mic, MicOff, Volume2, VolumeX, Trash2 } from "lucide-react"
 import { useVoice } from "../contexts/VoiceContext"
 
+// --- Responsive Styling ---
 const VoiceContainer = styled.div`
   display: flex;
   flex-direction: column;
-  height: 300px;
+  height: 100%;
+  min-height: 300px;
+  padding: 8px;
+  box-sizing: border-box;
+
+  @media (min-width: 768px) {
+    padding: 16px;
+  }
 `
 
 const VoiceVisualizer = styled.div`
   width: 100%;
-  height: 60px;
+  flex-shrink: 0;
+  height: 40px;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 2px;
-  margin: 20px 0;
+  margin: 15px 0;
+
+  @media (max-width: 480px) {
+    height: 40px;
+    margin: 12px 0;
+  }
 `
 
 const VisualizerBar = styled(motion.div)<{ $active: boolean }>`
-  width: 4px;
+  flex: 0 0 4px;
   background: ${(props) => (props.$active ? props.theme.colors.accent : props.theme.colors.border)};
   border-radius: 2px;
   height: ${(props) => (props.$active ? "40px" : "10px")};
   transition: all 0.2s ease;
+
+  @media (max-width: 480px) {
+    flex: 0 0 3px;
+  }
 `
 
 const ControlsContainer = styled.div`
   display: flex;
-  gap: 16px;
+  flex-wrap: wrap;
+  gap: 15px;
   justify-content: center;
-  margin: 20px 0;
+  margin: 15px 0;
+
+  @media (max-width: 480px) {
+    gap: 8px;
+    margin: 12px 0;
+  }
 `
 
 const ControlButton = styled.button<{ $active?: boolean }>`
+  flex: 0 0 auto;
   width: 50px;
   height: 50px;
   border-radius: 50%;
@@ -59,13 +84,24 @@ const ControlButton = styled.button<{ $active?: boolean }>`
     opacity: 0.5;
     cursor: not-allowed;
   }
+
+  @media (max-width: 480px) {
+    width: 40px;
+    height: 40px;
+  }
 `
 
 const StatusText = styled.div`
   font-size: 12px;
   color: ${(props) => props.theme.colors.textSecondary};
   text-align: center;
-  margin-bottom: 16px;
+  margin-top: 5px;
+  margin-bottom: 12px;
+
+  @media (max-width: 480px) {
+    font-size: 10px;
+    margin-bottom: 8px;
+  }
 `
 
 const CommandHistory = styled.div`
@@ -73,8 +109,9 @@ const CommandHistory = styled.div`
   background: ${(props) => props.theme.colors.background};
   border: 1px solid ${(props) => props.theme.colors.border};
   border-radius: 4px;
-  padding: 12px;
+  padding: 10px;
   overflow-y: auto;
+  min-height: 100px; 
 `
 
 const CommandItem = styled.div`
@@ -87,6 +124,11 @@ const CommandItem = styled.div`
 
   &:last-child {
     margin-bottom: 0;
+  }
+
+  @media (max-width: 480px) {
+    font-size: 10px;
+    padding: 6px;
   }
 `
 
@@ -120,6 +162,7 @@ const ClearButton = styled.button`
   align-items: center;
   gap: 4px;
   margin-bottom: 8px;
+  align-self: flex-end;
 
   &:hover {
     border-color: ${(props) => props.theme.colors.accent};
@@ -127,6 +170,7 @@ const ClearButton = styled.button`
   }
 `
 
+// --- Your Original Logic & JSX Below ---
 const VoiceControl = () => {
   const { isListening, isSpeaking, commandHistory, startListening, stopListening, speak, stopSpeaking, clearHistory } =
     useVoice()
@@ -180,7 +224,7 @@ const VoiceControl = () => {
           onClick={handleMicToggle}
           title={isListening ? "Stop Listening" : "Start Listening (Ctrl+Shift+G)"}
         >
-          {isListening ? <MicOff size={20} /> : <Mic size={20} />}
+          {isListening ? <MicOff size={18} /> : <Mic size={18} />}
         </ControlButton>
 
         <ControlButton
@@ -188,7 +232,7 @@ const VoiceControl = () => {
           onClick={handleSpeakToggle}
           title={isSpeaking ? "Stop Speaking" : "Test Voice"}
         >
-          {isSpeaking ? <VolumeX size={20} /> : <Volume2 size={20} />}
+          {isSpeaking ? <VolumeX size={18} /> : <Volume2 size={18} />}
         </ControlButton>
       </ControlsContainer>
 

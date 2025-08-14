@@ -1,33 +1,51 @@
 "use client"
 import { useState, useEffect } from "react"
-import styled from "styled-components"
-import { Activity, HardDrive, Wifi, Cpu, RefreshCw } from "lucide-react"
+import styled, { keyframes } from "styled-components"
+import { Cpu, RefreshCw, HardDrive, Wifi, Activity } from "lucide-react"
 import { useSystem } from "../contexts/SystemContext"
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts"
-import { formatBytes, formatUptime } from "../utils/helpers"
 import LoadingSpinner from "./LoadingSpinner"
+
+const spin = keyframes`
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+`
 
 const MonitorContainer = styled.div`
   display: flex;
   flex-direction: column;
-  height: 300px;
+  height: auto;
+  min-height: 300px;
+  padding: 8px;
+  @media (min-width: 768px) {
+    padding: 16px;
+  }
 `
 
 const StatsGrid = styled.div`
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1fr;
   gap: 12px;
   margin-bottom: 16px;
+  @media (min-width: 600px) {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  @media (min-width: 1024px) {
+    grid-template-columns: repeat(4, 1fr);
+  }
 `
 
 const StatCard = styled.div`
   background: ${(props) => props.theme.colors.background};
   border: 1px solid ${(props) => props.theme.colors.border};
-  border-radius: 4px;
+  border-radius: 6px;
   padding: 12px;
   text-align: center;
   position: relative;
   overflow: hidden;
+  @media (max-width: 480px) {
+    padding: 8px;
+  }
 `
 
 const StatValue = styled.div`
@@ -35,6 +53,9 @@ const StatValue = styled.div`
   font-weight: bold;
   color: ${(props) => props.theme.colors.accent};
   margin-bottom: 4px;
+  @media (max-width: 480px) {
+    font-size: 1rem;
+  }
 `
 
 const StatLabel = styled.div`
@@ -42,46 +63,25 @@ const StatLabel = styled.div`
   color: ${(props) => props.theme.colors.textSecondary};
   text-transform: uppercase;
   letter-spacing: 1px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  @media (max-width: 480px) {
+    font-size: 0.65rem;
+  }
 `
 
 const ChartContainer = styled.div`
   height: 100px;
   width: 100%;
   margin-top: -10px;
-`
-
-const SystemInfo = styled.div`
-  flex: 1;
-  background: ${(props) => props.theme.colors.background};
-  border: 1px solid ${(props) => props.theme.colors.border};
-  border-radius: 4px;
-  padding: 12px;
-  overflow-y: auto;
-`
-
-const InfoRow = styled.div`
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 6px 0;
-  border-bottom: 1px solid ${(props) => props.theme.colors.border}44;
-  font-size: 0.75rem;
-
-  &:last-child {
-    border-bottom: none;
+  @media (max-width: 480px) {
+    height: 80px;
   }
 `
 
-const InfoLabel = styled.span`
-  color: ${(props) => props.theme.colors.textSecondary};
-`
-
-const InfoValue = styled.span`
-  color: ${(props) => props.theme.colors.text};
-  font-weight: bold;
-`
-
-const RefreshButton = styled.button`
+const RefreshButton = styled.button<{ $loading?: boolean }>`
   background: transparent;
   border: 1px solid ${(props) => props.theme.colors.border};
   color: ${(props) => props.theme.colors.textSecondary};
@@ -94,15 +94,20 @@ const RefreshButton = styled.button`
   gap: 4px;
   margin-bottom: 8px;
   align-self: flex-start;
-
+  svg {
+    animation: ${(props) => (props.$loading ? spin : "none")} 1s linear infinite;
+  }
   &:hover {
     border-color: ${(props) => props.theme.colors.accent};
     color: ${(props) => props.theme.colors.accent};
   }
-
   &:disabled {
     opacity: 0.5;
     cursor: not-allowed;
+  }
+  @media (max-width: 480px) {
+    font-size: 0.7rem;
+    padding: 3px 6px;
   }
 `
 
@@ -122,7 +127,6 @@ const CustomTooltip = ({ active, payload }: any) => {
       </div>
     )
   }
-
   return null
 }
 
@@ -133,12 +137,10 @@ const SystemMonitor = () => {
   const [isRefreshing, setIsRefreshing] = useState(false)
 
   useEffect(() => {
-    // Simulate CPU usage and network activity
     const interval = setInterval(() => {
       setCpuUsage(Math.round(Math.random() * 100))
       setNetworkActivity(Math.round(Math.random() * 100))
     }, 2000)
-
     return () => clearInterval(interval)
   }, [])
 
@@ -148,30 +150,12 @@ const SystemMonitor = () => {
     setIsRefreshing(false)
   }
 
-  const memoryUsagePercent = systemInfo ? Math.round((systemInfo.memory.used / systemInfo.memory.total) * 100) : 0
+  const memoryUsagePercent =
+    systemInfo?.memory?.total && systemInfo?.memory?.used
+      ? Math.round((systemInfo.memory.used / systemInfo.memory.total) * 100)
+      : 0
   const memoryFreePercent = 100 - memoryUsagePercent
 
-  const cpuData = [
-    { name: "Used", value: cpuUsage },
-    { name: "Free", value: 100 - cpuUsage },
-  ]
-
-  const memoryData = [
-    { name: "Used", value: memoryUsagePercent },
-    { name: "Free", value: memoryFreePercent },
-  ]
-
-  const networkData = [
-    { name: "Activity", value: networkActivity },
-    { name: "Idle", value: 100 - networkActivity },
-  ]
-
-  const diskData = [
-    { name: "Used", value: 65 },
-    { name: "Free", value: 35 },
-  ]
-
-  // Color schemes for charts
   const COLORS = {
     cpu: ["#00ffff", "#1a1a1a"],
     memory: ["#00ff88", "#1a1a1a"],
@@ -179,197 +163,68 @@ const SystemMonitor = () => {
     disk: ["#ff6b35", "#1a1a1a"],
   }
 
+  const chartData = {
+    cpu: [
+      { name: "Used", value: cpuUsage },
+      { name: "Free", value: 100 - cpuUsage },
+    ],
+    memory: [
+      { name: "Used", value: memoryUsagePercent },
+      { name: "Free", value: memoryFreePercent },
+    ],
+    network: [
+      { name: "Activity", value: networkActivity },
+      { name: "Idle", value: 100 - networkActivity },
+    ],
+    disk: [
+      { name: "Used", value: 65 },
+      { name: "Free", value: 35 },
+    ],
+  }
+
   return (
     <MonitorContainer>
-      <RefreshButton onClick={handleRefresh} disabled={isRefreshing || isLoading}>
-        <RefreshCw size={10} style={{ animation: isRefreshing ? "spin 1s linear infinite" : "none" }} />
+      <RefreshButton onClick={handleRefresh} disabled={isRefreshing || isLoading} $loading={isRefreshing}>
+        <RefreshCw size={10} />
         Refresh
       </RefreshButton>
 
       <StatsGrid>
-        <StatCard>
-          <StatValue>{cpuUsage}%</StatValue>
-          <StatLabel>
-            <Cpu size={10} style={{ marginRight: "4px", verticalAlign: "middle" }} />
-            CPU Usage
-          </StatLabel>
-          <ChartContainer>
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie
-                  data={cpuData}
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={25}
-                  outerRadius={40}
-                  paddingAngle={2}
-                  dataKey="value"
-                  startAngle={90}
-                  endAngle={-270}
-                >
-                  {cpuData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS.cpu[index]} />
-                  ))}
-                </Pie>
-                <Tooltip content={<CustomTooltip />} />
-              </PieChart>
-            </ResponsiveContainer>
-          </ChartContainer>
-        </StatCard>
-
-        <StatCard>
-          <StatValue>{memoryUsagePercent}%</StatValue>
-          <StatLabel>
-            <Activity size={10} style={{ marginRight: "4px", verticalAlign: "middle" }} />
-            Memory
-          </StatLabel>
-          <ChartContainer>
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie
-                  data={memoryData}
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={25}
-                  outerRadius={40}
-                  paddingAngle={2}
-                  dataKey="value"
-                  startAngle={90}
-                  endAngle={-270}
-                >
-                  {memoryData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS.memory[index]} />
-                  ))}
-                </Pie>
-                <Tooltip content={<CustomTooltip />} />
-              </PieChart>
-            </ResponsiveContainer>
-          </ChartContainer>
-        </StatCard>
-
-        <StatCard>
-          <StatValue>{networkActivity}%</StatValue>
-          <StatLabel>
-            <Wifi size={10} style={{ marginRight: "4px", verticalAlign: "middle" }} />
-            Network
-          </StatLabel>
-          <ChartContainer>
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie
-                  data={networkData}
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={25}
-                  outerRadius={40}
-                  paddingAngle={2}
-                  dataKey="value"
-                  startAngle={90}
-                  endAngle={-270}
-                >
-                  {networkData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS.network[index]} />
-                  ))}
-                </Pie>
-                <Tooltip content={<CustomTooltip />} />
-              </PieChart>
-            </ResponsiveContainer>
-          </ChartContainer>
-        </StatCard>
-
-        <StatCard>
-          <StatValue>{systemInfo?.cpus || 0}</StatValue>
-          <StatLabel>
-            <HardDrive size={10} style={{ marginRight: "4px", verticalAlign: "middle" }} />
-            CPU Cores
-          </StatLabel>
-          <ChartContainer>
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie
-                  data={diskData}
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={25}
-                  outerRadius={40}
-                  paddingAngle={2}
-                  dataKey="value"
-                  startAngle={90}
-                  endAngle={-270}
-                >
-                  {diskData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS.disk[index]} />
-                  ))}
-                </Pie>
-                <Tooltip content={<CustomTooltip />} />
-              </PieChart>
-            </ResponsiveContainer>
-          </ChartContainer>
-        </StatCard>
+        {Object.entries(chartData).map(([key, data]) => (
+          <StatCard key={key}>
+            <StatValue>{data[0].value}%</StatValue>
+            <StatLabel>
+              {key === "cpu" && <Cpu size={10} />}
+              {key === "memory" && <HardDrive size={10} />}
+              {key === "network" && <Wifi size={10} />}
+              {key === "disk" && <Activity size={10} />}
+              {key.charAt(0).toUpperCase() + key.slice(1)} Usage
+            </StatLabel>
+            <ChartContainer>
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={data}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={25}
+                    outerRadius={40}
+                    paddingAngle={2}
+                    dataKey="value"
+                    startAngle={90}
+                    endAngle={-270}
+                  >
+                    {data.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={COLORS[key as keyof typeof COLORS][index]} />
+                    ))}
+                  </Pie>
+                  <Tooltip content={<CustomTooltip />} />
+                </PieChart>
+              </ResponsiveContainer>
+            </ChartContainer>
+          </StatCard>
+        ))}
       </StatsGrid>
-
-      <SystemInfo>
-        {systemInfo ? (
-          <>
-            <InfoRow>
-              <InfoLabel>Platform</InfoLabel>
-              <InfoValue>
-                {systemInfo.platform} ({systemInfo.arch})
-              </InfoValue>
-            </InfoRow>
-            <InfoRow>
-              <InfoLabel>Hostname</InfoLabel>
-              <InfoValue>{systemInfo.hostname}</InfoValue>
-            </InfoRow>
-            <InfoRow>
-              <InfoLabel>Username</InfoLabel>
-              <InfoValue>{systemInfo.username}</InfoValue>
-            </InfoRow>
-            <InfoRow>
-              <InfoLabel>Total Memory</InfoLabel>
-              <InfoValue>{formatBytes(systemInfo.memory.total)}</InfoValue>
-            </InfoRow>
-            <InfoRow>
-              <InfoLabel>Free Memory</InfoLabel>
-              <InfoValue>{formatBytes(systemInfo.memory.free)}</InfoValue>
-            </InfoRow>
-            <InfoRow>
-              <InfoLabel>Used Memory</InfoLabel>
-              <InfoValue>{formatBytes(systemInfo.memory.used)}</InfoValue>
-            </InfoRow>
-            <InfoRow>
-              <InfoLabel>Uptime</InfoLabel>
-              <InfoValue>{formatUptime(systemInfo.uptime)}</InfoValue>
-            </InfoRow>
-            <InfoRow>
-              <InfoLabel>Home Directory</InfoLabel>
-              <InfoValue>{systemInfo.homeDir}</InfoValue>
-            </InfoRow>
-          </>
-        ) : (
-          <div
-            style={{
-              color: "#666",
-              fontSize: "0.75rem",
-              textAlign: "center",
-              padding: "20px",
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              gap: "10px",
-            }}
-          >
-            {isLoading ? (
-              <>
-                <LoadingSpinner size={20} />
-                <span>Loading system information...</span>
-              </>
-            ) : (
-              "System information unavailable"
-            )}
-          </div>
-        )}
-      </SystemInfo>
     </MonitorContainer>
   )
 }
